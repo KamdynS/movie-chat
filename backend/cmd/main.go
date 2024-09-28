@@ -5,6 +5,7 @@ import (
 
 	"github.com/kamdyns/movie-chat/db"
 	"github.com/kamdyns/movie-chat/internal/user"
+	"github.com/kamdyns/movie-chat/internal/websocket"
 	"github.com/kamdyns/movie-chat/router"
 )
 
@@ -18,6 +19,10 @@ func main() {
 	userServ := user.NewService(userRep)
 	userHandler := user.NewHandler(userServ)
 
-	router.InitRouter(userHandler)
-	router.Start("localhost:8080", router.InitRouter(userHandler))
+	hub := websocket.NewHub()
+	wsHandler := websocket.NewHandler(hub)
+	go hub.Run()
+
+	router.InitRouter(userHandler, wsHandler)
+	router.Start("localhost:8080", router.InitRouter(userHandler, wsHandler))
 }
