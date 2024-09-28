@@ -13,25 +13,27 @@ const movieRooms = [
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100">
-      <div className="container mx-auto py-8">
-        <h1 className="text-3xl font-bold mb-6 text-blue-300">Movie Rooms</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {movieRooms.map((room) => (
-            <Card key={room.id} className="bg-slate-800 border-slate-700 hover:border-blue-400 transition-colors">
-              <CardHeader>
-                <CardTitle className="text-blue-200">{room.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-slate-400">Year: {room.year}</p>
-              </CardContent>
-              <CardFooter>
-                <Link href={`/chatroom/${room.id}`} passHref>
-                  <Button className="bg-purple-700 hover:bg-purple-600 text-slate-100">Join Room</Button>
-                </Link>
-              </CardFooter>
-            </Card>
-          ))}
+    <div className="flex flex-col min-h-[100dvh] bg-slate-900 text-slate-100">
+      <div className="min-h-screen bg-slate-900 text-slate-100">
+        <div className="container mx-auto py-8">
+          <h1 className="text-3xl font-bold mb-6 text-blue-300">Movie Rooms</h1>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {movieRooms.map((room) => (
+              <Card key={room.id} className="bg-slate-800 border-slate-700 hover:border-blue-400 transition-colors">
+                <CardHeader>
+                  <CardTitle className="text-blue-200">{room.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-slate-400">Year: {room.year}</p>
+                </CardContent>
+                <CardFooter>
+                  <Link href={`/chatroom/${room.id}`} passHref>
+                    <Button className="bg-purple-700 hover:bg-purple-600 text-slate-100">Join Room</Button>
+                  </Link>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     </div>

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/kamdyns/movie-chat/util"
+	"github.com/kamdyns/movie-chat/pkg/util"
 )
 
 const (
