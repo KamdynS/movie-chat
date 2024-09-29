@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/kamdyns/movie-chat/internal/model"
 	ws "github.com/kamdyns/movie-chat/internal/websocket"
 )
 
@@ -29,40 +30,81 @@ func NewWebSocketHandler(hub *ws.Hub) *WebSocketHandler {
 func (h *WebSocketHandler) HandleWebSocket(c *gin.Context) {
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	roomID := c.Query("roomId")
+	clientID := c.Query("userId")
+	username := c.Query("username")
+
 	client := &ws.Client{
-		Conn: conn,
-		Send: make(chan []byte, 256),
+		Conn:     conn,
+		Message:  make(chan *ws.Message, 10),
+		ID:       clientID,
+		RoomID:   roomID,
+		Username: username,
 	}
 
 	h.hub.Register <- client
 
-	// Implement ReadPump and WritePump methods
+	message := &ws.Message{
+		Content:  "A new user has joined the room",
+		RoomID:   roomID,
+		Username: username,
+	}
+
+	h.hub.Broadcast <- message // Changed from []byte(message.Content) to message
+
+	go client.WriteMessage()
+	client.ReadMessage(h.hub)
 }
 
 func (h *WebSocketHandler) CreateRoom(c *gin.Context) {
-	// Implementation depends on your websocket setup
-	c.JSON(http.StatusOK, gin.H{"message": "Room created"})
+	var req model.CreateRoomReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	h.hub.Rooms[req.ID] = &ws.Room{
+		ID:      req.ID,
+		Name:    req.Name,
+		Clients: make(map[string]*ws.Client),
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Room created successfully"})
 }
 
 func (h *WebSocketHandler) JoinRoom(c *gin.Context) {
-	// Implementation depends on your websocket setup
-	c.JSON(http.StatusOK, gin.H{"message": "Joined room"})
+	// This is handled in HandleWebSocket, so we can remove this or keep it as a placeholder
+	c.JSON(http.StatusOK, gin.H{"message": "Use WebSocket connection to join a room"})
 }
 
 func (h *WebSocketHandler) GetRooms(c *gin.Context) {
-	// Implementation depends on your websocket setup
-	c.JSON(http.StatusOK, gin.H{"rooms": h.hub.Rooms})
+	rooms := make([]model.RoomRes, 0)
+	for _, r := range h.hub.Rooms {
+		rooms = append(rooms, model.RoomRes{
+			ID:   r.ID,
+			Name: r.Name,
+		})
+	}
+
+	c.JSON(http.StatusOK, rooms)
 }
 
 func (h *WebSocketHandler) GetClients(c *gin.Context) {
-	// Implementation depends on your websocket setup
+	var clients []model.ClientRes
 	roomID := c.Param("roomId")
+
 	if room, ok := h.hub.Rooms[roomID]; ok {
-		c.JSON(http.StatusOK, gin.H{"clients": room.Clients})
+		for _, cl := range room.Clients {
+			clients = append(clients, model.ClientRes{
+				ID:       cl.ID,
+				Username: cl.Username,
+			})
+		}
+		c.JSON(http.StatusOK, clients)
 	} else {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Room not found"})
 	}

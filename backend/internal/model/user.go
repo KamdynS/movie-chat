@@ -29,3 +29,8 @@ type LoginUserRes struct {
 	ID          string `json:"id" db:"id"`
 	Username    string `json:"username" db:"username"`
 }
+
+type ClientRes struct {
+	ID       string `json:"id"`
+	Username string `json:"username"`
+}

@@ -24,7 +24,7 @@ type Server struct {
 }
 
 func NewServer(cfg *config.Config) (*Server, error) {
-	db, err := database.NewDatabase(cfg.DatabaseURL)
+	db, err := database.NewDatabase()
 	if err != nil {
 		return nil, err
 	}
