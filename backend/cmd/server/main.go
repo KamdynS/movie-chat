@@ -3,26 +3,22 @@ package main
 import (
 	"log"
 
-	"github.com/kamdyns/movie-chat/db"
-	"github.com/kamdyns/movie-chat/internal/user"
-	"github.com/kamdyns/movie-chat/internal/websocket"
-	"github.com/kamdyns/movie-chat/router"
+	"github.com/kamdyns/movie-chat/internal/config"
+	"github.com/kamdyns/movie-chat/internal/server"
 )
 
 func main() {
-	dbConn, err := db.NewDatabase()
+	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("Could not initialize database connection: %s", err)
+		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	userRep := user.NewRepository(dbConn.GetDB())
-	userServ := user.NewService(userRep)
-	userHandler := user.NewHandler(userServ)
+	srv, err := server.NewServer(cfg)
+	if err != nil {
+		log.Fatalf("Failed to create server: %v", err)
+	}
 
-	hub := websocket.NewHub()
-	wsHandler := websocket.NewHandler(hub)
-	go hub.Run()
-
-	router.InitRouter(userHandler, wsHandler)
-	router.Start("localhost:8080", router.InitRouter(userHandler, wsHandler))
+	if err := srv.Run(); err != nil {
+		log.Fatalf("Failed to run server: %v", err)
+	}
 }
