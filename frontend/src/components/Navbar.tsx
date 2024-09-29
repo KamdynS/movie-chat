@@ -2,12 +2,10 @@
 
 import Link from 'next/link'
 import { Button } from './ui/button'
-import { useRouter } from 'next/navigation';
 import { UserButton, SignInButton, SignUpButton, useUser } from "@clerk/nextjs";
 
 export default function Navbar() {
-  const { isSignedIn, user } = useUser();
-  const router = useRouter();
+  const { isSignedIn } = useUser();
 
   return (
     <header className="px-4 py-6 sm:px-6 lg:px-8 bg-slate-900">
@@ -25,24 +23,24 @@ export default function Navbar() {
           <Link href="/about" className="text-sm font-medium text-slate-100 hover:underline underline-offset-4">
             About
           </Link>
+          {isSignedIn && (
+            <Link href="/user-profile/[[...user-profile]]" as="/user-profile" className="text-sm font-medium text-slate-100 hover:underline underline-offset-4">
+              Profile
+            </Link>
+          )}
         </nav>
         <div className="flex items-center gap-2">
           {!isSignedIn ? (
             <>
               <SignInButton mode="modal">
-                <Button variant="outline" className="bg-slate-100 text-purple-700 hover:bg-purple-700">Sign in</Button>
+                <Button variant="outline" className="bg-slate-100 text-purple-700 hover:bg-purple-700 hover:text-slate-100">Sign in</Button>
               </SignInButton>
               <SignUpButton mode="modal">
                 <Button className="bg-purple-700 hover:bg-purple-600 text-slate-100">Sign up</Button>
               </SignUpButton>
             </>
           ) : (
-            <>
-              <Link href="/profile" className="text-sm font-medium text-slate-100 hover:underline underline-offset-4">
-                Profile
-              </Link>
-              <UserButton afterSignOutUrl="/" />
-            </>
+            <UserButton afterSignOutUrl="/" />
           )}
         </div>
       </div>
