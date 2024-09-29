@@ -58,17 +58,16 @@ func NewServer(cfg *config.Config) (*Server, error) {
 func (s *Server) setupRoutes() {
 	userHandler := handler.NewUserHandler(s.userService)
 	roomHandler := handler.NewRoomHandler(s.roomService)
-	wsHandler := handler.NewWebSocketHandler(s.wsHub)
+	wsHandler := handler.NewWebSocketHandler(s.wsHub, s.roomService)
 
 	s.router.POST("/signup", userHandler.CreateUser)
 	s.router.POST("/login", userHandler.Login)
 	s.router.GET("/logout", userHandler.Logout)
 
-	s.router.POST("/rooms", roomHandler.CreateRoom)
 	s.router.GET("/rooms", roomHandler.GetRooms)
 
 	s.router.GET("/ws", wsHandler.HandleWebSocket)
-	s.router.POST("/ws/createRoom", wsHandler.CreateRoom)
+	s.router.GET("/ws/createRoom", wsHandler.CreateRoom)
 	s.router.GET("/ws/joinRoom/:roomId", wsHandler.JoinRoom)
 	s.router.GET("/ws/getRooms", wsHandler.GetRooms)
 	s.router.GET("/ws/getClients/:roomId", wsHandler.GetClients)

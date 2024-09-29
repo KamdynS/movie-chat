@@ -2,10 +2,12 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/kamdyns/movie-chat/internal/model"
+	"github.com/kamdyns/movie-chat/internal/service"
 	ws "github.com/kamdyns/movie-chat/internal/websocket"
 )
 
@@ -18,12 +20,14 @@ var upgrader = websocket.Upgrader{
 }
 
 type WebSocketHandler struct {
-	hub *ws.Hub
+	hub         *ws.Hub
+	roomService service.RoomService // Add this line
 }
 
-func NewWebSocketHandler(hub *ws.Hub) *WebSocketHandler {
+func NewWebSocketHandler(hub *ws.Hub, roomService service.RoomService) *WebSocketHandler {
 	return &WebSocketHandler{
-		hub: hub,
+		hub:         hub,
+		roomService: roomService, // Add this line
 	}
 }
 
@@ -61,19 +65,25 @@ func (h *WebSocketHandler) HandleWebSocket(c *gin.Context) {
 }
 
 func (h *WebSocketHandler) CreateRoom(c *gin.Context) {
-	var req model.CreateRoomReq
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	name := c.Query("name")
+	if name == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Room name is required"})
 		return
 	}
 
-	h.hub.Rooms[req.ID] = &ws.Room{
-		ID:      req.ID,
-		Name:    req.Name,
+	room, err := h.roomService.CreateRoom(c.Request.Context(), name)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	h.hub.Rooms[room.ID] = &ws.Room{
+		ID:      room.ID,
+		Name:    room.Name,
 		Clients: make(map[string]*ws.Client),
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Room created successfully"})
+	c.JSON(http.StatusCreated, room)
 }
 
 func (h *WebSocketHandler) JoinRoom(c *gin.Context) {
@@ -82,15 +92,112 @@ func (h *WebSocketHandler) JoinRoom(c *gin.Context) {
 }
 
 func (h *WebSocketHandler) GetRooms(c *gin.Context) {
-	rooms := make([]model.RoomRes, 0)
-	for _, r := range h.hub.Rooms {
-		rooms = append(rooms, model.RoomRes{
-			ID:   r.ID,
-			Name: r.Name,
-		})
+	rooms, err := h.roomService.GetRooms(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 
 	c.JSON(http.StatusOK, rooms)
+}
+
+func (h *WebSocketHandler) GetRoom(c *gin.Context) {
+	id := c.Param("id")
+	room, err := h.roomService.GetRoom(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, room)
+}
+
+func (h *WebSocketHandler) UpdateRoom(c *gin.Context) {
+	var room model.Room
+	if err := c.ShouldBindJSON(&room); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	room.ID = c.Param("id")
+	updatedRoom, err := h.roomService.UpdateRoom(c.Request.Context(), &room)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Update the room in the hub
+	if hubRoom, ok := h.hub.Rooms[updatedRoom.ID]; ok {
+		hubRoom.Name = updatedRoom.Name
+	}
+
+	c.JSON(http.StatusOK, updatedRoom)
+}
+
+func (h *WebSocketHandler) DeleteRoom(c *gin.Context) {
+	id := c.Param("id")
+	err := h.roomService.DeleteRoom(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Remove the room from the hub
+	delete(h.hub.Rooms, id)
+
+	c.JSON(http.StatusOK, gin.H{"message": "Room deleted successfully"})
+}
+
+func (h *WebSocketHandler) AddMember(c *gin.Context) {
+	roomID := c.Param("id")
+	var req struct {
+		UserID int64 `json:"user_id" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err := h.roomService.AddMember(c.Request.Context(), roomID, req.UserID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Member added successfully"})
+}
+
+func (h *WebSocketHandler) RemoveMember(c *gin.Context) {
+	roomID := c.Param("id")
+	userID, err := strconv.ParseInt(c.Param("user_id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	err = h.roomService.RemoveMember(c.Request.Context(), roomID, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Remove the client from the hub room if they're connected
+	if room, ok := h.hub.Rooms[roomID]; ok {
+		delete(room.Clients, strconv.FormatInt(userID, 10))
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Member removed successfully"})
+}
+
+func (h *WebSocketHandler) GetRoomMembers(c *gin.Context) {
+	roomID := c.Param("id")
+	members, err := h.roomService.GetRoomMembers(c.Request.Context(), roomID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, members)
 }
 
 func (h *WebSocketHandler) GetClients(c *gin.Context) {
