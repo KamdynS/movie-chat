@@ -3,6 +3,7 @@ package server
 import (
 	"database/sql"
 
+	"github.com/clerkinc/clerk-sdk-go/clerk"
 	"github.com/gin-gonic/gin"
 	"github.com/kamdyns/movie-chat/internal/config"
 	"github.com/kamdyns/movie-chat/internal/handler"
@@ -21,6 +22,7 @@ type Server struct {
 	userService service.UserService
 	roomService service.RoomService
 	wsHub       *websocket.Hub
+	clerkClient clerk.Client
 }
 
 func NewServer(cfg *config.Config) (*Server, error) {
@@ -37,6 +39,11 @@ func NewServer(cfg *config.Config) (*Server, error) {
 
 	wsHub := websocket.NewHub()
 
+	clerkClient, err := clerk.NewClient(cfg.ClerkSecretKey)
+	if err != nil {
+		return nil, err
+	}
+
 	router := gin.Default()
 
 	server := &Server{
@@ -48,6 +55,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		userService: userService,
 		roomService: roomService,
 		wsHub:       wsHub,
+		clerkClient: clerkClient,
 	}
 
 	server.setupRoutes()
@@ -58,19 +66,42 @@ func NewServer(cfg *config.Config) (*Server, error) {
 func (s *Server) setupRoutes() {
 	userHandler := handler.NewUserHandler(s.userService)
 	roomHandler := handler.NewRoomHandler(s.roomService)
-	wsHandler := handler.NewWebSocketHandler(s.wsHub, s.roomService)
+	wsHandler := handler.NewWebSocketHandler(s.wsHub, s.roomService, s.userRepo)
 
-	s.router.POST("/signup", userHandler.CreateUser)
-	s.router.POST("/login", userHandler.Login)
-	s.router.GET("/logout", userHandler.Logout)
+	s.router.POST("/webhook", userHandler.HandleClerkWebhook)
 
-	s.router.GET("/rooms", roomHandler.GetRooms)
+	// Apply Clerk middleware to protected routes
+	protected := s.router.Group("/")
+	protected.Use(s.clerkAuthMiddleware())
+	{
+		protected.GET("/rooms", roomHandler.GetRooms)
+		protected.GET("/ws", wsHandler.HandleWebSocket)
+		protected.GET("/ws/createRoom", wsHandler.CreateRoom)
+		protected.GET("/ws/joinRoom/:roomId", wsHandler.JoinRoom)
+		protected.GET("/ws/getRooms", wsHandler.GetRooms)
+		protected.GET("/ws/getClients/:roomId", wsHandler.GetClients)
+	}
+}
 
-	s.router.GET("/ws", wsHandler.HandleWebSocket)
-	s.router.GET("/ws/createRoom", wsHandler.CreateRoom)
-	s.router.GET("/ws/joinRoom/:roomId", wsHandler.JoinRoom)
-	s.router.GET("/ws/getRooms", wsHandler.GetRooms)
-	s.router.GET("/ws/getClients/:roomId", wsHandler.GetClients)
+func (s *Server) clerkAuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		sessionToken := c.GetHeader("Authorization")
+		if sessionToken == "" {
+			c.JSON(401, gin.H{"error": "No authorization header provided"})
+			c.Abort()
+			return
+		}
+
+		claims, err := s.clerkClient.VerifyToken(sessionToken)
+		if err != nil {
+			c.JSON(401, gin.H{"error": "Invalid session token"})
+			c.Abort()
+			return
+		}
+
+		c.Set("userID", claims.Subject)
+		c.Next()
+	}
 }
 
 func (s *Server) Run() error {

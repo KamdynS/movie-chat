@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/kamdyns/movie-chat/internal/model"
+	repository "github.com/kamdyns/movie-chat/internal/repository"
 	"github.com/kamdyns/movie-chat/internal/service"
 	ws "github.com/kamdyns/movie-chat/internal/websocket"
 )
@@ -20,14 +21,16 @@ var upgrader = websocket.Upgrader{
 }
 
 type WebSocketHandler struct {
-	hub         *ws.Hub
-	roomService service.RoomService // Add this line
+	hub            *ws.Hub
+	roomService    service.RoomService
+	userRepository repository.UserRepository
 }
 
-func NewWebSocketHandler(hub *ws.Hub, roomService service.RoomService) *WebSocketHandler {
+func NewWebSocketHandler(hub *ws.Hub, roomService service.RoomService, userRepository repository.UserRepository) *WebSocketHandler {
 	return &WebSocketHandler{
-		hub:         hub,
-		roomService: roomService, // Add this line
+		hub:            hub,
+		roomService:    roomService,
+		userRepository: userRepository,
 	}
 }
 
@@ -39,15 +42,25 @@ func (h *WebSocketHandler) HandleWebSocket(c *gin.Context) {
 	}
 
 	roomID := c.Query("roomId")
-	clientID := c.Query("userId")
-	username := c.Query("username")
+	clerkUserID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	// Fetch user details from the database
+	user, err := h.userRepository.GetUserByClerkID(c.Request.Context(), clerkUserID.(string))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user details"})
+		return
+	}
 
 	client := &ws.Client{
 		Conn:     conn,
 		Message:  make(chan *ws.Message, 10),
-		ID:       clientID,
+		ID:       user.ClerkUserID,
 		RoomID:   roomID,
-		Username: username,
+		Username: user.Username,
 	}
 
 	h.hub.Register <- client
@@ -55,10 +68,10 @@ func (h *WebSocketHandler) HandleWebSocket(c *gin.Context) {
 	message := &ws.Message{
 		Content:  "A new user has joined the room",
 		RoomID:   roomID,
-		Username: username,
+		Username: user.Username,
 	}
 
-	h.hub.Broadcast <- message // Changed from []byte(message.Content) to message
+	h.hub.Broadcast <- message
 
 	go client.WriteMessage()
 	client.ReadMessage(h.hub)

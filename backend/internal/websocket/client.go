@@ -9,7 +9,7 @@ import (
 type Client struct {
 	Conn     *websocket.Conn
 	Message  chan *Message
-	ID       string `json:"id"`
+	ID       string `json:"id"` // This should be the Clerk User ID
 	RoomID   string `json:"room_id"`
 	Username string `json:"username"`
 }

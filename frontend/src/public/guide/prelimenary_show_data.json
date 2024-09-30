@@ -1,0 +1,244 @@
+{
+    "shows": [
+      {
+        "id": 1,
+        "title": "Friends",
+        "description": "Six friends navigate life and love in New York City.",
+        "duration": 30,
+        "isMovie": false,
+        "episode": 1,
+        "season": 1,
+        "channelId": 1
+      },
+      {
+        "id": 2,
+        "title": "The Office (US)",
+        "description": "A mockumentary on a group of typical office workers.",
+        "duration": 30,
+        "isMovie": false,
+        "episode": 1,
+        "season": 1,
+        "channelId": 1
+      },
+      {
+        "id": 3,
+        "title": "Seinfeld",
+        "description": "The mundane lives of four New York friends.",
+        "duration": 30,
+        "isMovie": false,
+        "episode": 1,
+        "season": 1,
+        "channelId": 1
+      },
+      {
+        "id": 4,
+        "title": "How I Met Your Mother",
+        "description": "Ted Mosby recounts to his kids the events that led him to meet their mother.",
+        "duration": 30,
+        "isMovie": false,
+        "episode": 1,
+        "season": 1,
+        "channelId": 1
+      },
+      {
+        "id": 5,
+        "title": "Brooklyn Nine-Nine",
+        "description": "Jake Peralta, an immature but talented NYPD detective in Brooklyn's fictional 99th precinct.",
+        "duration": 30,
+        "isMovie": false,
+        "episode": 1,
+        "season": 1,
+        "channelId": 1
+      },
+      {
+        "id": 6,
+        "title": "Parks and Recreation",
+        "description": "The absurd antics of an Indiana town's public officials as they pursue sundry projects to make their city a better place.",
+        "duration": 30,
+        "isMovie": false,
+        "episode": 1,
+        "season": 1,
+        "channelId": 1
+      },
+      {
+        "id": 7,
+        "title": "The Big Bang Theory",
+        "description": "A woman who moves into an apartment across the hall from two brilliant but socially awkward physicists shows them how little they know about life outside of the laboratory.",
+        "duration": 30,
+        "isMovie": false,
+        "episode": 1,
+        "season": 1,
+        "channelId": 1
+      },
+      {
+        "id": 8,
+        "title": "Modern Family",
+        "description": "Three different but related families face trials and tribulations in their own uniquely comedic ways.",
+        "duration": 30,
+        "isMovie": false,
+        "episode": 1,
+        "season": 1,
+        "channelId": 1
+      },
+      {
+        "id": 9,
+        "title": "New Girl",
+        "description": "After a bad break-up, Jess, an offbeat young woman, moves into an apartment loft with three single men.",
+        "duration": 30,
+        "isMovie": false,
+        "episode": 1,
+        "season": 1,
+        "channelId": 1
+      },
+      {
+        "id": 10,
+        "title": "The Good Place",
+        "description": "Four people and their otherworldly frienemy struggle in the afterlife to define what it means to be good.",
+        "duration": 30,
+        "isMovie": false,
+        "episode": 1,
+        "season": 1,
+        "channelId": 1
+      },
+      {
+        "id": 11,
+        "title": "Community",
+        "description": "A suspended lawyer is forced to enroll in a community college with an eclectic staff and student body.",
+        "duration": 30,
+        "isMovie": false,
+        "episode": 1,
+        "season": 1,
+        "channelId": 1
+      },
+      {
+        "id": 12,
+        "title": "Schitt's Creek",
+        "description": "When rich video-store magnate Johnny Rose and his family suddenly find themselves broke, they are forced to leave their pampered lives to regroup in Schitt's Creek.",
+        "duration": 30,
+        "isMovie": false,
+        "episode": 1,
+        "season": 1,
+        "channelId": 1
+      },
+      {
+        "id": 101,
+        "title": "Attack on Titan",
+        "description": "After his hometown is destroyed and his mother is killed, young Eren Jaeger vows to cleanse the earth of the giant humanoid Titans that have brought humanity to the brink of extinction.",
+        "duration": 30,
+        "isMovie": false,
+        "episode": 1,
+        "season": 1,
+        "channelId": 2
+      },
+      {
+        "id": 102,
+        "title": "Death Note",
+        "description": "An intelligent high school student goes on a secret crusade to eliminate criminals from the world after discovering a notebook capable of killing anyone whose name is written into it.",
+        "duration": 30,
+        "isMovie": false,
+        "episode": 1,
+        "season": 1,
+        "channelId": 2
+      },
+      {
+        "id": 103,
+        "title": "My Hero Academia",
+        "description": "A superhero-loving boy without any powers is determined to enroll in a prestigious hero academy and learn what it really means to be a hero.",
+        "duration": 30,
+        "isMovie": false,
+        "episode": 1,
+        "season": 1,
+        "channelId": 2
+      },
+      {
+        "id": 104,
+        "title": "One Punch Man",
+        "description": "The story of Saitama, a hero who does it just for fun & can defeat his enemies with a single punch.",
+        "duration": 30,
+        "isMovie": false,
+        "episode": 1,
+        "season": 1,
+        "channelId": 2
+      },
+      {
+        "id": 105,
+        "title": "Fullmetal Alchemist: Brotherhood",
+        "description": "Two brothers search for a Philosopher's Stone after an attempt to revive their deceased mother goes awry and leaves them in damaged physical forms.",
+        "duration": 30,
+        "isMovie": false,
+        "episode": 1,
+        "season": 1,
+        "channelId": 2
+      },
+      {
+        "id": 106,
+        "title": "Demon Slayer",
+        "description": "A family is attacked by demons and only two members survive - Tanjiro and his sister Nezuko, who is turning into a demon slowly. Tanjiro sets out to become a demon slayer to avenge his family and cure his sister.",
+        "duration": 30,
+        "isMovie": false,
+        "episode": 1,
+        "season": 1,
+        "channelId": 2
+      },
+      {
+        "id": 107,
+        "title": "Naruto",
+        "description": "Naruto Uzumaki, a mischievous adolescent ninja, struggles as he searches for recognition and dreams of becoming the Hokage, the village's leader and strongest ninja.",
+        "duration": 30,
+        "isMovie": false,
+        "episode": 1,
+        "season": 1,
+        "channelId": 2
+      },
+      {
+        "id": 108,
+        "title": "Steins;Gate",
+        "description": "A group of friends create a device that can send messages to the past, with unforeseen consequences.",
+        "duration": 30,
+        "isMovie": false,
+        "episode": 1,
+        "season": 1,
+        "channelId": 2
+      },
+      {
+        "id": 109,
+        "title": "Tokyo Ghoul",
+        "description": "A Tokyo college student is attacked by a ghoul, a superpowered human who feeds on human flesh. He survives, but has become part ghoul and becomes a fugitive on the run.",
+        "duration": 30,
+        "isMovie": false,
+        "episode": 1,
+        "season": 1,
+        "channelId": 2
+      },
+      {
+        "id": 110,
+        "title": "Sword Art Online",
+        "description": "In the near future, a Virtual Reality Massive Multiplayer Online Role-Playing Game (VRMMORPG) called Sword Art Online has been released where players control their avatars with their bodies using a piece of technology called Nerve Gear.",
+        "duration": 30,
+        "isMovie": false,
+        "episode": 1,
+        "season": 1,
+        "channelId": 2
+      },
+      {
+        "id": 111,
+        "title": "Hunter x Hunter",
+        "description": "Gon Freecss aspires to become a Hunter, an exceptional being capable of greatness. With his friends and his potential, he seeks for his father who left him when he was younger.",
+        "duration": 30,
+        "isMovie": false,
+        "episode": 1,
+        "season": 1,
+        "channelId": 2
+      },
+      {
+        "id": 112,
+        "title": "Dragon Ball Z",
+        "description": "After learning that he is from another planet, a warrior named Goku and his friends are prompted to defend it from an onslaught of extraterrestrial enemies.",
+        "duration": 30,
+        "isMovie": false,
+        "episode": 1,
+        "season": 1,
+        "channelId": 2
+      }
+    ]
+  }

@@ -7,9 +7,10 @@ import (
 )
 
 type Config struct {
-	DatabaseURL   string
-	ServerAddress string
-	JWTSecret     string
+	DatabaseURL    string
+	ServerAddress  string
+	JWTSecret      string
+	ClerkSecretKey string
 }
 
 func Load() (*Config, error) {
@@ -18,8 +19,9 @@ func Load() (*Config, error) {
 	}
 
 	return &Config{
-		DatabaseURL:   os.Getenv("DATABASE_URL"),
-		ServerAddress: os.Getenv("SERVER_ADDRESS"),
-		JWTSecret:     os.Getenv("JWT_SECRET"),
+		DatabaseURL:    os.Getenv("DATABASE_URL"),
+		ServerAddress:  os.Getenv("SERVER_ADDRESS"),
+		JWTSecret:      os.Getenv("JWT_SECRET"),
+		ClerkSecretKey: os.Getenv("CLERK_SECRET_KEY"),
 	}, nil
 }

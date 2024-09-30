@@ -1,33 +1,21 @@
 package model
 
 type User struct {
-	ID       int64  `json:"id" db:"id"`
-	Username string `json:"username" db:"username"`
-	Email    string `json:"email" db:"email"`
-	Password string `json:"-" db:"password"`
-}
-
-type CreateUserReq struct {
-	Username string `json:"username" db:"username"`
-	Email    string `json:"email" db:"email"`
-	Password string `json:"password" db:"password"`
-}
-
-type CreateUserRes struct {
-	ID       string `json:"id" db:"id"`
-	Username string `json:"username" db:"username"`
-	Email    string `json:"email" db:"email"`
-}
-
-type LoginUserReq struct {
-	Email    string `json:"email" db:"email"`
-	Password string `json:"password" db:"password"`
-}
-
-type LoginUserRes struct {
-	AccessToken string `json:"access_token"`
-	ID          string `json:"id" db:"id"`
+	ID          int64  `json:"id" db:"id"`
+	ClerkUserID string `json:"clerk_user_id" db:"clerk_user_id"`
 	Username    string `json:"username" db:"username"`
+	Email       string `json:"email" db:"email"`
+}
+
+// Remove CreateUserReq, CreateUserRes, LoginUserReq, LoginUserRes
+
+type ClerkWebhookEvent struct {
+	Type string `json:"type"`
+	Data struct {
+		ID       string `json:"id"`
+		Username string `json:"username"`
+		Email    string `json:"email_address"`
+	} `json:"data"`
 }
 
 type ClientRes struct {

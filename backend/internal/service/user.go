@@ -2,18 +2,14 @@ package service
 
 import (
 	"context"
-	"strconv"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/kamdyns/movie-chat/internal/model"
 	"github.com/kamdyns/movie-chat/internal/repository"
-	"github.com/kamdyns/movie-chat/pkg/util"
 )
 
 type UserService interface {
-	CreateUser(ctx context.Context, req *model.CreateUserReq) (*model.CreateUserRes, error)
-	Login(ctx context.Context, req *model.LoginUserReq) (*model.LoginUserRes, error)
+	HandleClerkWebhook(ctx context.Context, event *model.ClerkWebhookEvent) error
 }
 
 type userService struct {
@@ -28,63 +24,34 @@ func NewUserService(userRepo repository.UserRepository) UserService {
 	}
 }
 
-func (s *userService) CreateUser(ctx context.Context, req *model.CreateUserReq) (*model.CreateUserRes, error) {
+func (s *userService) HandleClerkWebhook(ctx context.Context, event *model.ClerkWebhookEvent) error {
 	ctx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
-	hashedPassword, err := util.HashPassword(req.Password)
-	if err != nil {
-		return nil, err
+	switch event.Type {
+	case "user.created":
+		user := &model.User{
+			ClerkUserID: event.Data.ID,
+			Username:    event.Data.Username,
+			Email:       event.Data.Email,
+		}
+		_, err := s.userRepo.CreateUser(ctx, user)
+		return err
+	case "user.updated":
+		user := &model.User{
+			ClerkUserID: event.Data.ID,
+			Username:    event.Data.Username,
+			Email:       event.Data.Email,
+		}
+		return s.userRepo.UpdateUser(ctx, user)
+	default:
+		return nil // Ignore unhandled event types
 	}
-
-	u := &model.User{
-		Username: req.Username,
-		Email:    req.Email,
-		Password: hashedPassword,
-	}
-
-	r, err := s.userRepo.CreateUser(ctx, u)
-	if err != nil {
-		return nil, err
-	}
-
-	res := &model.CreateUserRes{
-		ID:       strconv.FormatInt(r.ID, 10),
-		Username: r.Username,
-		Email:    r.Email,
-	}
-
-	return res, nil
 }
 
-func (s *userService) Login(ctx context.Context, req *model.LoginUserReq) (*model.LoginUserRes, error) {
+func (s *userService) GetUserDetails(ctx context.Context, clerkUserID string) (*model.User, error) {
 	ctx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
-	u, err := s.userRepo.GetUserByEmail(ctx, req.Email)
-	if err != nil {
-		return nil, err
-	}
-
-	err = util.CheckPassword(req.Password, u.Password)
-	if err != nil {
-		return nil, err
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": u.ID,
-		"exp": time.Now().Add(time.Hour * 24).Unix(),
-	})
-
-	// TODO: Use a proper secret key
-	tokenString, err := token.SignedString([]byte("your-secret-key"))
-	if err != nil {
-		return nil, err
-	}
-
-	return &model.LoginUserRes{
-		AccessToken: tokenString,
-		ID:          strconv.FormatInt(u.ID, 10),
-		Username:    u.Username,
-	}, nil
+	return s.userRepo.GetUserByClerkID(ctx, clerkUserID)
 }
