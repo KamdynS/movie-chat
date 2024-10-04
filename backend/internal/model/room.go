@@ -1,13 +1,10 @@
 package model
 
-import "time"
+import (
+	"time"
 
-type Room struct {
-	ID        string    `json:"id"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-}
+	"github.com/google/uuid"
+)
 
 type RoomMember struct {
 	ID       int64     `json:"id"`
@@ -16,11 +13,27 @@ type RoomMember struct {
 	JoinedAt time.Time `json:"joined_at"`
 }
 
-type CreateRoomReq struct {
-	Name string `json:"name"`
+type Room struct {
+	ID        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
+	CreatedBy string    `json:"created_by"`
+	CreatedAt time.Time `json:"created_at"`
+	ExpiresAt time.Time `json:"expires_at"`
 }
 
-type RoomRes struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+type CreateRoomReq struct {
+	Name      string `json:"name"`
+	ExpiresIn int64  `json:"expires_in"`
+}
+
+type RoomListResponse struct {
+	Rooms       []Room `json:"rooms"`
+	TotalCount  int    `json:"totalCount"`
+	CurrentPage int    `json:"currentPage"`
+	TotalPages  int    `json:"totalPages"`
+}
+
+type RoomListReq struct {
+	Page  int `form:"page,default=1"`
+	Limit int `form:"limit,default=20"`
 }

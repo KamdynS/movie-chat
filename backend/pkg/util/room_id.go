@@ -2,13 +2,14 @@ package util
 
 import (
 	"crypto/rand"
-	"encoding/base64"
+
+	"github.com/google/uuid"
 )
 
-func GenerateRoomID() (string, error) {
+func GenerateRoomID() (uuid.UUID, error) {
 	b := make([]byte, 16)
 	if _, err := rand.Read(b); err != nil {
-		return "", err
+		return uuid.Nil, err
 	}
-	return base64.URLEncoding.EncodeToString(b), nil
+	return uuid.New(), nil
 }

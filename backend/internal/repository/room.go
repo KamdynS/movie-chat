@@ -10,7 +10,8 @@ import (
 type RoomRepository interface {
 	CreateRoom(ctx context.Context, room *model.Room) (*model.Room, error)
 	GetRoom(ctx context.Context, id string) (*model.Room, error)
-	GetRooms(ctx context.Context) ([]*model.Room, error)
+	GetRooms(ctx context.Context, limit, offset int) ([]model.Room, error)
+	GetTotalRoomCount(ctx context.Context) (int, error)
 	UpdateRoom(ctx context.Context, room *model.Room) (*model.Room, error)
 	DeleteRoom(ctx context.Context, id string) error
 	AddMember(ctx context.Context, roomID string, userID int64) error
@@ -27,8 +28,8 @@ func NewRoomRepository(db *sql.DB) RoomRepository {
 }
 
 func (r *roomRepository) CreateRoom(ctx context.Context, room *model.Room) (*model.Room, error) {
-	query := `INSERT INTO rooms(id, name) VALUES ($1, $2) RETURNING id`
-	err := r.db.QueryRowContext(ctx, query, room.ID, room.Name).Scan(&room.ID)
+	query := `INSERT INTO rooms(id, name, created_by, created_at, expires_at) VALUES ($1, $2, $3, $4, $5) RETURNING id, name, created_by, created_at, expires_at`
+	err := r.db.QueryRowContext(ctx, query, room.ID, room.Name, room.CreatedBy, room.CreatedAt, room.ExpiresAt).Scan(&room.ID, &room.Name, &room.CreatedBy, &room.CreatedAt, &room.ExpiresAt)
 	if err != nil {
 		return nil, err
 	}
@@ -45,23 +46,37 @@ func (r *roomRepository) GetRoom(ctx context.Context, id string) (*model.Room, e
 	return &room, nil
 }
 
-func (r *roomRepository) GetRooms(ctx context.Context) ([]*model.Room, error) {
-	query := `SELECT id, name FROM rooms`
-	rows, err := r.db.QueryContext(ctx, query)
+func (r *roomRepository) GetRooms(ctx context.Context, limit, offset int) ([]model.Room, error) {
+	query := `
+		SELECT id, name, created_by, created_at, expires_at 
+		FROM rooms 
+		WHERE expires_at > NOW() 
+		ORDER BY created_at DESC 
+		LIMIT $1 OFFSET $2
+	`
+	rows, err := r.db.QueryContext(ctx, query, limit, offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var rooms []*model.Room
+	var rooms []model.Room
 	for rows.Next() {
-		room := &model.Room{}
-		if err := rows.Scan(&room.ID, &room.Name); err != nil {
+		var room model.Room
+		if err := rows.Scan(&room.ID, &room.Name, &room.CreatedBy, &room.CreatedAt, &room.ExpiresAt); err != nil {
 			return nil, err
 		}
 		rooms = append(rooms, room)
 	}
+
 	return rooms, nil
+}
+
+func (r *roomRepository) GetTotalRoomCount(ctx context.Context) (int, error) {
+	var count int
+	query := "SELECT COUNT(*) FROM rooms WHERE expires_at > NOW()"
+	err := r.db.QueryRowContext(ctx, query).Scan(&count)
+	return count, err
 }
 
 func (r *roomRepository) UpdateRoom(ctx context.Context, room *model.Room) (*model.Room, error) {

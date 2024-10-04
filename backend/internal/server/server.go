@@ -2,9 +2,12 @@ package server
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/clerkinc/clerk-sdk-go/clerk"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+
 	"github.com/kamdyns/movie-chat/internal/config"
 	"github.com/kamdyns/movie-chat/internal/handler"
 	"github.com/kamdyns/movie-chat/internal/repository"
@@ -46,6 +49,18 @@ func NewServer(cfg *config.Config) (*Server, error) {
 
 	router := gin.Default()
 
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowMethods:     []string{"GET", "POST"},
+		AllowHeaders:     []string{"Content-Type"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		AllowOriginFunc: func(origin string) bool {
+			return origin == "http://localhost:3000"
+		},
+		MaxAge: 12 * time.Hour,
+	}))
+
 	server := &Server{
 		config:      cfg,
 		db:          db,
@@ -74,12 +89,11 @@ func (s *Server) setupRoutes() {
 	protected := s.router.Group("/")
 	protected.Use(s.clerkAuthMiddleware())
 	{
-		protected.GET("/rooms", roomHandler.GetRooms)
+		protected.GET("/getRooms", roomHandler.GetRooms)
+		protected.POST("/createRoom", roomHandler.CreateRoom)
 		protected.GET("/ws", wsHandler.HandleWebSocket)
-		protected.POST("/ws/createRoom", roomHandler.CreateRoom)
-		protected.GET("/ws/joinRoom/:roomId", wsHandler.JoinRoom)
-		protected.GET("/ws/getRooms", wsHandler.GetRooms)
-		protected.GET("/ws/getClients/:roomId", wsHandler.GetClients)
+		protected.POST("/ws/joinRoom/:roomId", wsHandler.JoinRoom)
+		protected.POST("/ws/leaveRoom/:roomId", wsHandler.LeaveRoom)
 	}
 }
 

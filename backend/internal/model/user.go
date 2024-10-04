@@ -1,13 +1,19 @@
 package model
 
-type User struct {
-	ID          int64  `json:"id" db:"id"`
-	ClerkUserID string `json:"clerk_user_id" db:"clerk_user_id"`
-	Username    string `json:"username" db:"username"`
-	Email       string `json:"email" db:"email"`
-}
+import (
+	"time"
 
-// Remove CreateUserReq, CreateUserRes, LoginUserReq, LoginUserRes
+	"github.com/google/uuid"
+)
+
+type User struct {
+	ID          uuid.UUID `json:"id" db:"id"`
+	ClerkUserID string    `json:"clerk_user_id" db:"clerk_user_id"`
+	Username    string    `json:"username" db:"username"`
+	Email       string    `json:"email" db:"email"`
+	CreatedAt   time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
+}
 
 type ClerkWebhookEvent struct {
 	Type string `json:"type"`

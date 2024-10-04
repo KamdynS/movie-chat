@@ -3,8 +3,10 @@ package handler
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/kamdyns/movie-chat/internal/model"
 	"github.com/kamdyns/movie-chat/internal/service"
 	"github.com/kamdyns/movie-chat/pkg/util"
@@ -27,15 +29,18 @@ func (h *RoomHandler) CreateRoom(c *gin.Context) {
 		return
 	}
 
-	roomID, err := util.GenerateRoomID() // Implement this function to generate a unique ID
+	roomID, err := util.GenerateRoomID()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate room ID"})
 		return
 	}
 
 	room := &model.Room{
-		ID:   roomID,
-		Name: req.Name,
+		ID:        roomID,
+		Name:      req.Name,
+		CreatedBy: c.GetString("userID"),
+		CreatedAt: time.Now(),
+		ExpiresAt: time.Now().Add(time.Duration(req.ExpiresIn) * time.Second),
 	}
 
 	createdRoom, err := h.roomService.CreateRoom(c.Request.Context(), room)
@@ -48,13 +53,28 @@ func (h *RoomHandler) CreateRoom(c *gin.Context) {
 }
 
 func (h *RoomHandler) GetRooms(c *gin.Context) {
-	rooms, err := h.roomService.GetRooms(c.Request.Context())
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	var params model.RoomListReq
+	if err := c.ShouldBindQuery(&params); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, rooms)
+	rooms, totalCount, err := h.roomService.GetRooms(c.Request.Context(), params.Page, params.Limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve rooms"})
+		return
+	}
+
+	totalPages := (totalCount + params.Limit - 1) / params.Limit // Calculate total pages
+
+	response := model.RoomListResponse{
+		Rooms:       rooms,
+		TotalCount:  totalCount,
+		CurrentPage: params.Page,
+		TotalPages:  totalPages,
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 func (h *RoomHandler) GetRoom(c *gin.Context) {
@@ -75,7 +95,14 @@ func (h *RoomHandler) UpdateRoom(c *gin.Context) {
 		return
 	}
 
-	room.ID = c.Param("id")
+	roomID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid room ID"})
+		return
+	}
+
+	room.ID = roomID
+
 	updatedRoom, err := h.roomService.UpdateRoom(c.Request.Context(), &room)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

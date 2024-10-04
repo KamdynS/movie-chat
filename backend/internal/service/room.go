@@ -10,7 +10,7 @@ import (
 
 type RoomService interface {
 	CreateRoom(ctx context.Context, room *model.Room) (*model.Room, error)
-	GetRooms(ctx context.Context) ([]*model.Room, error)
+	GetRooms(ctx context.Context, page, limit int) ([]model.Room, int, error)
 	GetRoom(ctx context.Context, id string) (*model.Room, error)
 	UpdateRoom(ctx context.Context, room *model.Room) (*model.Room, error)
 	DeleteRoom(ctx context.Context, id string) error
@@ -38,11 +38,19 @@ func (s *roomService) CreateRoom(ctx context.Context, room *model.Room) (*model.
 	return s.roomRepo.CreateRoom(ctx, room)
 }
 
-func (s *roomService) GetRooms(ctx context.Context) ([]*model.Room, error) {
-	ctx, cancel := context.WithTimeout(ctx, s.timeout)
-	defer cancel()
+func (s *roomService) GetRooms(ctx context.Context, page, limit int) ([]model.Room, int, error) {
+	offset := (page - 1) * limit
+	rooms, err := s.roomRepo.GetRooms(ctx, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
 
-	return s.roomRepo.GetRooms(ctx)
+	totalCount, err := s.roomRepo.GetTotalRoomCount(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return rooms, totalCount, nil
 }
 
 // New methods for roomService
