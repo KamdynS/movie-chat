@@ -4,7 +4,6 @@ import "./globals.css";
 import Navbar from "@/components/Navbar"
 import {
   ClerkProvider,
-  // Remove unused imports
 } from '@clerk/nextjs'
 
 const geistSans = localFont({
@@ -31,6 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <ClerkProvider
+        publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
         appearance={{
           variables: { colorPrimary: "#000000" },
           elements: {

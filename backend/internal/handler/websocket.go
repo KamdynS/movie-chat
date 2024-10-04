@@ -77,28 +77,6 @@ func (h *WebSocketHandler) HandleWebSocket(c *gin.Context) {
 	client.ReadMessage(h.hub)
 }
 
-func (h *WebSocketHandler) CreateRoom(c *gin.Context) {
-	name := c.Query("name")
-	if name == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Room name is required"})
-		return
-	}
-
-	room, err := h.roomService.CreateRoom(c.Request.Context(), name)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	h.hub.Rooms[room.ID] = &ws.Room{
-		ID:      room.ID,
-		Name:    room.Name,
-		Clients: make(map[string]*ws.Client),
-	}
-
-	c.JSON(http.StatusCreated, room)
-}
-
 func (h *WebSocketHandler) JoinRoom(c *gin.Context) {
 	// This is handled in HandleWebSocket, so we can remove this or keep it as a placeholder
 	c.JSON(http.StatusOK, gin.H{"message": "Use WebSocket connection to join a room"})

@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kamdyns/movie-chat/internal/model"
 	"github.com/kamdyns/movie-chat/internal/service"
+	"github.com/kamdyns/movie-chat/pkg/util"
 )
 
 type RoomHandler struct {
@@ -20,19 +21,30 @@ func NewRoomHandler(roomService service.RoomService) *RoomHandler {
 }
 
 func (h *RoomHandler) CreateRoom(c *gin.Context) {
-	name := c.Query("name")
-	if name == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Room name is required"})
+	var req model.CreateRoomReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	room, err := h.roomService.CreateRoom(c.Request.Context(), name)
+	roomID, err := util.GenerateRoomID() // Implement this function to generate a unique ID
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate room ID"})
+		return
+	}
+
+	room := &model.Room{
+		ID:   roomID,
+		Name: req.Name,
+	}
+
+	createdRoom, err := h.roomService.CreateRoom(c.Request.Context(), room)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusCreated, room)
+	c.JSON(http.StatusCreated, createdRoom)
 }
 
 func (h *RoomHandler) GetRooms(c *gin.Context) {

@@ -6,13 +6,11 @@ import (
 
 	"github.com/kamdyns/movie-chat/internal/model"
 	"github.com/kamdyns/movie-chat/internal/repository"
-	"github.com/kamdyns/movie-chat/pkg/util"
 )
 
 type RoomService interface {
-	CreateRoom(ctx context.Context, name string) (*model.Room, error)
+	CreateRoom(ctx context.Context, room *model.Room) (*model.Room, error)
 	GetRooms(ctx context.Context) ([]*model.Room, error)
-	// New methods
 	GetRoom(ctx context.Context, id string) (*model.Room, error)
 	UpdateRoom(ctx context.Context, room *model.Room) (*model.Room, error)
 	DeleteRoom(ctx context.Context, id string) error
@@ -33,19 +31,9 @@ func NewRoomService(roomRepo repository.RoomRepository) RoomService {
 	}
 }
 
-func (s *roomService) CreateRoom(ctx context.Context, name string) (*model.Room, error) {
+func (s *roomService) CreateRoom(ctx context.Context, room *model.Room) (*model.Room, error) {
 	ctx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
-
-	roomID, err := util.GenerateRoomID()
-	if err != nil {
-		return nil, err
-	}
-
-	room := &model.Room{
-		ID:   roomID,
-		Name: name,
-	}
 
 	return s.roomRepo.CreateRoom(ctx, room)
 }

@@ -39,7 +39,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 
 	wsHub := websocket.NewHub()
 
-	clerkClient, err := clerk.NewClient(cfg.ClerkSecretKey)
+	clerkClient, err := clerk.NewClient(cfg.ClerkPublicKey)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (s *Server) setupRoutes() {
 	{
 		protected.GET("/rooms", roomHandler.GetRooms)
 		protected.GET("/ws", wsHandler.HandleWebSocket)
-		protected.GET("/ws/createRoom", wsHandler.CreateRoom)
+		protected.POST("/ws/createRoom", roomHandler.CreateRoom)
 		protected.GET("/ws/joinRoom/:roomId", wsHandler.JoinRoom)
 		protected.GET("/ws/getRooms", wsHandler.GetRooms)
 		protected.GET("/ws/getClients/:roomId", wsHandler.GetClients)

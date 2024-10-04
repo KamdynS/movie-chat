@@ -28,6 +28,11 @@ export default function Navbar() {
               Profile
             </Link>
           )}
+          {isSignedIn && (
+            <Link href="/create-room" className="text-sm font-medium text-slate-100 hover:underline underline-offset-4">
+              Create Room
+            </Link>
+          )}
         </nav>
         <div className="flex items-center gap-2">
           {!isSignedIn ? (
